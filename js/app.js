@@ -1,4 +1,5 @@
 var map;
+var infowindow;
 
 function initMap() {
 	map= new google.maps.Map(document.getElementsById('map'), {
@@ -9,7 +10,7 @@ function initMap() {
 		zoom: 6 
 	});
 
-	var infowindow = new google.maps.Infowindow();
+	 infowindow = new google.maps.Infowindow();
 	var boundary = new google.maps.LatLngBounds();
 	var defaultIcon = makeMarkerIcon('https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small&chld=dollar|bb|Mall|FcFCDE|000000');
 	var MallIcon = makeMarkerIcon('http://www.clipartkid.com/images/59/shopping-centers-and-shopping-malls-based-in-part-on-criteria-bl6mf2-clipart.jpg');
@@ -128,7 +129,7 @@ self.populateInfoWindow = function (marker, infowindow) {
 		}
 
 		var InfoContent = function(marker, wiki) { 
-			infowindow.setContent('<div class = "info-window"><p><h4>' + marker.title + '</h4>' + wiki '</p></div>');
+			infowindow.setContent('<div class = "info-window"><p><h4>' + marker.title + '</h4>' + wiki  + '</p></div>');
 
 			infowindow.addListener('closeclick', function() {
 				marker.setIcon(defaultIcon);
