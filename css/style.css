@@ -1,0 +1,121 @@
+html,
+      body {
+  width: 100%;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  position: absolute;
+  height: 95%;
+}
+
+.first-row {
+  background: white;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.menu-icon {
+  width: 30px;
+}
+
+.hamburger {
+  width: 40px;
+  color: black;
+}
+
+h1 {
+  font-size: 1em;
+  width: 80%;
+  margin: 5px;
+}
+
+ul {
+  list-style-image: url('images/tree.png');
+}
+
+li {
+  position: relative;
+}
+
+.heart p{
+  margin-top: 10px;
+  margin-right: 10px;
+}
+
+.column {
+  width: 100%;
+}
+
+.iw-info{
+  flex: wrap;
+}
+
+@media screen and (max-width: 549px) {
+  .nav-panel, .location-list {
+    max-height: 140px;
+    width: 100%;
+  }
+
+  .heart p{
+    display: none;
+  }
+
+  ul {
+    list-style: none;
+  }
+
+  .list-view {
+    font-size: .7em;
+  }
+
+  .info-window {
+    font-size: 8px;
+  }
+}
+
+  .search-items {
+    width: 20%;
+  }
+
+  .list-view {
+    font-size: 1em;
+  }
+
+
+.search-items{
+  z-index: 1;
+        /*width: 300px;*/
+  position: absolute;
+  height: 100%;
+  background-color: white;
+  opacity: .8;
+  -webkit-transform: translate(-100%, 0);
+  transform: translate(-100%, 0);
+  transition: transform 0.3s ease;
+}
+
+.open {
+  -webkit-transform: translate(0, 0);
+  transform: translate(0, 0);
+}
+
+.movemap {
+}
+
+.list-view {
+  margin-bottom: 15px;
+}
+
+#map {
+  bottom: 0px;
+  height: 100%;
+  position: absolute;
+  right: 0px;
+  width: 100%;
+}

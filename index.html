@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+	<title>Neighborhood Map</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<script src='js/knockout-3.4.0.js' type='text/javascript'>       </script>
+  	<script src="js/jquery.min.js"></script>
+  	<script src="js/app.js" type="text/javascript"></script>
+</head>
+<body>
+	<div class="column">
+		<div class="first-row">
+			<div class="menu-icon" data-bind="click: toggle">
+			<span div="hamburger"></span>
+			<span div="hamburger"></span>
+			<span div="hamburger"></span>
+			</div>
+			<h1>Shopping Malls</h1>
+		</div>
+		<div class="row">
+			<div class="search-items" data-bind="css: {open: isOpen}">
+				<input type="search" placeholder="your choice" data-bind="textInput: userInput, event: {keyup: filterMarkers}">
+				<ul id="list-view" data-bind="foreach: visiblePlaces">
+					<li data-bind="text: title, click: $parent.presentMarker, event: {mouseover:$parent.ladyIcon, mouseout:$parent.resetIcon}">
+					</li>
+					<li class = "heart" style="list-style: none">
+						<p> &#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;</p>
+					</li>
+				</ul>
+			</div>
+			<div data-bind="css:{movemap:isOpen}">
+        	<div data-bind="click: close" id="map"></div>
+      		</div>
+		</div>
+	</div>
+
+	<script async defer onerror="googleMapsError()" src="https://maps.googleapis.com/maps/api/js?libraries=geometry,drawing&key=AIzaSyBMi1K1FAyvzfpVY2Ni0_JIBojtGfk5vmE&v=3&callback=initMap"></script>
+	
+</body>
