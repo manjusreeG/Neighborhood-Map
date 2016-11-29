@@ -13,9 +13,9 @@
 	<div class="column">
 		<div class="first-row">
 			<div class="menu-icon" data-bind="click: toggle">
-			<span div="hamburger"></span>
-			<span div="hamburger"></span>
-			<span div="hamburger"></span>
+			<div class="hamburger"></div>
+			<div class="hamburger"></div>
+			<div class="hamburger"></div>
 			</div>
 			<h1>Shopping Malls</h1>
 		</div>
@@ -23,7 +23,10 @@
 			<div class="search-items" data-bind="css: {open: isOpen}">
 				<input type="search" placeholder="your choice" data-bind="textInput: userInput, event: {keyup: filterMarkers}">
 				<ul id="list-view" data-bind="foreach: visiblePlaces">
-					<li data-bind="text: title, click: $parent.presentMarker, event: {mouseover:$parent.ladyIcon, mouseout:$parent.resetIcon}">
+					<li data-bind="text: location.title[], click: $parent.presentMarker, $parent.showInfo, event: {mouseover:$parent.ladyIcon, mouseout:$parent.resetIcon}">
+						<strong data-bind="text: title"></strong>
+						<p data-bind="text: coordinates"></p>
+
 					</li>
 					<li class = "heart" style="list-style: none">
 						<p> &#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;</p>
