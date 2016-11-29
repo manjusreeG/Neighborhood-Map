@@ -1,27 +1,22 @@
 var map;
-var infowindow;
+var markers = [];
 
 function initMap() {
-	map= new google.maps.Map(document.getElementById('map'), {
+	map= new  google.maps.Map(document.getElementById('map'), {
 		center: {
 			lat: 13.074859, 
 			lng: 80.222684
 		},
 		zoom: 6 
 	});
-
-	 infowindow = new google.maps.Infowindow();
-	var boundary = new google.maps.LatLngBounds();
-	var defaultIcon = makeMarkerIcon('https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small&chld=dollar|bb|Mall|FcFCDE|000000');
-	var MallIcon = makeMarkerIcon('http://www.clipartkid.com/images/59/shopping-centers-and-shopping-malls-based-in-part-on-criteria-bl6mf2-clipart.jpg');
-
-	ko.applyBindings(new Viewmodel());
+ko.applyBindings(new Viewmodel());
 
 }
 
 var Viewmodel = function() {
 	var self = this;
 
+	this.userInput = ko.observable('');
 	this.isOpen = ko.observable(false);
 
 	this.toggle = function() {
@@ -43,7 +38,10 @@ var Viewmodel = function() {
 		}
 	}
 
+	this.filtersMarkers = ko.observableArray(false);
+
 	this.presentMarker = function() {
+
 		for (var i = 0; i < self.locations().length; i++) {
 		 self.locations()[i].marker.clicked = false;
 		 google.maps.event.trigger(self.locations()[i].marker, 'mouseout')
@@ -54,7 +52,7 @@ var Viewmodel = function() {
 		self.populateInfoWindow(this.marker, infowindow);
 	}
 
-	this.filtersVisible = ko.observable(false);
+	this.filtersVisible = ko.observable(true);
 
 	this.locations= ko.observableArray([{
 		title: 'Phoenix Market city',
@@ -95,7 +93,7 @@ var Viewmodel = function() {
 
 self.populateInfoWindow = function (marker, infowindow) {
 
-	map.fitBounds(boundary);
+	map.fitBounds(bounds);
 
 	if (infowindow.marker != marker) {
 		infowindow.marker = marker;
@@ -136,15 +134,15 @@ self.populateInfoWindow = function (marker, infowindow) {
 				marker.clicked = false;
 				infowindow.marker = null;
 				map.setCenter(map.center);
-				map.fitBounds(boundary);
+				map.fitBounds(bounds);
 			});
 
 			google.maps.event.addDOMListener(map, 'click', function() {
 				marker.setIcon(defaultIcon);
 				marker.clicked = false;
-				infowindow.marker = null;
+				infowindow.marker = true;
 				infowindow.close();
-				map.fitBounds(boundary);
+				map.fitBounds(bounds);
 			});
 
 			if ((self.isOpen) && ($(window).width() < 550)) {
@@ -156,7 +154,15 @@ self.populateInfoWindow = function (marker, infowindow) {
 		}
 	};
 
+	self.writeConsole = ko.computed(function() {
+        console.log(self.userInput());
+    });
+
 	self.createMarkers = function() {
+		var infowindow = new google.maps.InfoWindow();
+		var bounds = new google.maps.LatLngBounds();
+		var MallIcon = makeMarkerIcon('http://www.clipartkid.com/images/59/shopping-centers-and-shopping-malls-based-in-part-on-criteria-bl6mf2-clipart.jpg');
+		var defaultIcon = makeMarkerIcon('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|05F941|40|_|%E2%80%A2');
 		for (var i = 0; i < self.locations().length; i++) {
 			var position  = self.locations()[i].coordinates;
 			var title = self.locations()[i].title;
@@ -192,15 +198,17 @@ self.populateInfoWindow = function (marker, infowindow) {
 				}
 			});
 
-			boundary.extend(marker.position);
+			bounds.extend(marker.position);
 		}
 
-		map.fitBounds(boundary);
+		map.fitBounds(bounds);
 	}
 	self.createMarkers();
 };
 
 function getSearchTerms(loc) {
+	var userInput;
+
 	var fullLoc = loc.split(",");
 
 	for (var i = 0; i < fullLoc.length; i++) {
