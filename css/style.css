@@ -25,8 +25,10 @@ html,
 }
 
 .hamburger {
-  width: 40px;
-  color: black;
+  width: 35px;
+  height: 5px;
+  background-color: black;
+  margin: 6px 0;
 }
 
 h1 {
