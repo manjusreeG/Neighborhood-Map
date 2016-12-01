@@ -12,7 +12,7 @@
 <body>
 	<div class="column">
 		<div class="first-row">
-			<div class="menu-icon" data-bind="click: toggle">
+			<div class="menu-icon" data-bind="click: toggle"> 
 			<div class="hamburger"></div>
 			<div class="hamburger"></div>
 			<div class="hamburger"></div>
@@ -21,12 +21,10 @@
 		</div>
 		<div class="row">
 			<div class="search-items" data-bind="css: {open: isOpen}">
-				<input type="search" placeholder="your choice" data-bind="textInput: userInput, event: {keyup: filterMarkers}">
-				<ul id="list-view" data-bind="foreach: visiblePlaces">
-					<li data-bind="text: location.title[], click: $parent.presentMarker, $parent.showInfo, event: {mouseover:$parent.ladyIcon, mouseout:$parent.resetIcon}">
-						<strong data-bind="text: title"></strong>
-						<p data-bind="text: coordinates"></p>
-
+				<input type="search" placeholder="your choice" data-bind="textInput: userInput, value:filtersVisible, valueUpdate: 'filtersMarkers', event: {keyup: getSearchTerms} ">
+				<ul id="list-view" data-bind="foreach: locations">
+					<li data-bind=" text: title, click: $root.presentMarker, $root.showInfo, $root.listItemClick, event: {mouseover:$root.ladyIcon, mouseout:$root.resetIcon}">
+						<a data-bind="text: title, visible: show, click: $root.list"></a>
 					</li>
 					<li class = "heart" style="list-style: none">
 						<p> &#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;&#9829;</p>
