@@ -163,7 +163,7 @@ var Viewmodel = function() {
 			google.maps.event.addDOMListener(map, 'click', function() {
 				marker.setIcon(defaultIcon);
 				marker.clicked = true;
-				infowindow.marker = true;
+				infowindow.marker = null;
 				infowindow.close();
 				map.fitBounds(bounds);
 			});
