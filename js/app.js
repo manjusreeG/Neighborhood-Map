@@ -34,12 +34,13 @@ var Viewmodel = function() {
 
         //Setting up  search bar filter to connect with Google Maps markers
 
-        if (places.name.toLowerCase().indexOf(self.filter().toLowerCase()) >= 0) {
-            if (map !== null) places.marker.setMap(map);
+        if (locations.title.toLowerCase().indexOf(self.filter().toLowerCase()) >= 0) {
+            if (map !== null) locations.marker.setMap(map);
             return true;
         } else {
             p.marker.setMap(null);
             return false;
+            return ko.utils.stringStartsWith(places.title().toLowerCase(), filter);
         }
         });
 
@@ -60,7 +61,6 @@ var Viewmodel = function() {
 
 	
 
-	self.filtersMarkers = ko.observableArray(false); //filters markers
 
 	// set the properties of marker here
 	self.presentMarker = function() {
@@ -183,7 +183,9 @@ var Viewmodel = function() {
 		}
 	};
 
-	
+	self.writeConsole = ko.computed(function() {
+        console.log(self.userInput());
+    });
 
 	self.createMarkers = function() {
 		 infowindow = new google.maps.InfoWindow(); //info window is specified here
@@ -250,6 +252,7 @@ var Viewmodel = function() {
 
 //search input is defined here
 function getSearchTerms(loc) {
+	console.log(loc)
 	var userInput; //userInput is defined here
 
 	var fullLoc = loc.split(",");
