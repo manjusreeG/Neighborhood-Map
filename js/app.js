@@ -1,6 +1,9 @@
 /* The map variable is created here */
 var map;
 var markers = [];
+var MallIcon;
+var defaultIcon;
+var infowindow;
 
 /*Initialized the map  fn here */
 function initMap() {
@@ -121,17 +124,19 @@ var Viewmodel = function() {
 			infowindow.marker = marker;
 		var address = getSearchTerms(marker.title);
 		//wikipedia url is obtained here
-		var wikiUrl = "https://en.wikipedia.org/w/api.php?action=isOpensearch&search=" + address.wikiSrcTxt + "&limit=1&redirects=resolve&namespace=0&format=json";
+		var wikiUrl = "https://en.wikipedia.org/w/api.php?action=isOpensearch&search=" + address.wikiSrcTxt + "&limit=1&redirects=resolve&namespace=0&format=json&callback=wikicallback";
 
-		infowindow.isOpen(map, marker);
+		infowindow.open(map, marker);
 		// shows error when wikipedia element is not shown.
 		self.apiTimeout = setTimeout(function() {
 			alert('ERROR: Data Loading failed ');
-		}, 8000);
+		}, 10000);
 
+	self.wikimarker = function(marker, infowindow) {
 		$.ajax({
 			url: wikiUrl,
 			dataType: 'jsonp',
+			jsonp: 'jsoncallback',
 		}).success(function(data) {
 		 	var wiki;
 			if (data[2].length != 0) {
@@ -148,9 +153,10 @@ var Viewmodel = function() {
 			clearTimeout(self.apiTimeout);
 			});
 		}
+	}
 		// marker infos are defined here
 		var InfoContent = function(marker, wiki) { 
-			infowindow.setContent('<div class = "info-window"><p><h4>' + marker.title + '</h4>' + wiki  + '</p></div>');
+			infowindow.setContent('<div class = "info-window"><p class = "infowiki"><h4>' + marker.title + '</h4>' + wiki  + '</p></div>');
 			//info window is closed once the close button is pressed
 			infowindow.addListener('closeclick', function() {
 				marker.setIcon(defaultIcon);
@@ -163,7 +169,7 @@ var Viewmodel = function() {
 			google.maps.event.addDOMListener(map, 'click', function() {
 				marker.setIcon(defaultIcon);
 				marker.clicked = true;
-				infowindow.marker = null;
+				infowindow.marker = wiki;
 				infowindow.close();
 				map.fitBounds(bounds);
 			});
@@ -177,16 +183,14 @@ var Viewmodel = function() {
 		}
 	};
 
-	self.writeConsole = ko.computed(function() {
-        console.log(self.userInput());
-    });
+	
 
 	self.createMarkers = function() {
-		var infowindow = new google.maps.InfoWindow(); //info window is specified here
+		 infowindow = new google.maps.InfoWindow(); //info window is specified here
 		// this specifies the lady icon when the pin marker is clicked
-		var MallIcon = makeMarkerIcon('http://www.clipartkid.com/images/59/shopping-centers-and-shopping-malls-based-in-part-on-criteria-bl6mf2-clipart.jpg'); 
+		 MallIcon = makeMarkerIcon('http://www.clipartkid.com/images/59/shopping-centers-and-shopping-malls-based-in-part-on-criteria-bl6mf2-clipart.jpg'); 
 		// The pin marker is defined here
-		var defaultIcon = makeMarkerIcon('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|05F941|40|_|%E2%80%A2');
+		 defaultIcon = makeMarkerIcon('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|05F941|40|_|%E2%80%A2');
 		// Location properties will be declared
 		for (var i = 0; i < self.locations().length; i++) {
 			var position  = self.locations()[i].coordinates;
@@ -248,7 +252,7 @@ var Viewmodel = function() {
 function getSearchTerms(loc) {
 	var userInput; //userInput is defined here
 
-	var fullLoc = loc.split(",");
+	var fullLoc = loc("");
 
 	for (var i = 0; i < fullLoc.length; i++) {
 		fullLoc[i] = fullLoc[i].replace(/ /g, "+");
