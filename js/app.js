@@ -252,7 +252,7 @@ var Viewmodel = function() {
 function getSearchTerms(loc) {
 	var userInput; //userInput is defined here
 
-	var fullLoc = loc("");
+	var fullLoc = loc.split(",");
 
 	for (var i = 0; i < fullLoc.length; i++) {
 		fullLoc[i] = fullLoc[i].replace(/ /g, "+");
