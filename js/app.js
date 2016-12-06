@@ -4,6 +4,7 @@ var markers = [];
 var MallIcon;
 var defaultIcon;
 var infowindow;
+var filter;
 
 /*Initialized the map  fn here */
 function initMap() {
@@ -19,6 +20,14 @@ ko.applyBindings(new Viewmodel());
 
 }
 
+var stringStartsWith = function (string, startsWith) {
+    string = string || "";
+    if (startsWith.length > string.length) {
+        return false;
+    }
+    return string.substring(0, startsWith.length) === startsWith;
+  };
+
 var Viewmodel = function() {
 	var self = this;
 	//map boundary is controlled here
@@ -26,25 +35,23 @@ var Viewmodel = function() {
 
 	self.userInput = ko.observable('');
 	self.isOpen = ko.observable(false);
-	self.places = ko.observableArray(this.locations); //locations are stored here
-	self.filter = ko.observable("");
-
-	self.search = ko.computed(function() {
-        return ko.utils.arrayFilter(self.places(), function(places) {
-
-        //Setting up  search bar filter to connect with Google Maps markers
-
-        if (locations.title.toLowerCase().indexOf(self.filter().toLowerCase()) >= 0) {
-            if (map !== null) locations.marker.setMap(map);
-            return true;
-        } else {
-            p.marker.setMap(null);
-            return false;
-            return ko.utils.stringStartsWith(places.title().toLowerCase(), filter);
-        }
+	self.places = ko.observableArray(self.locations); //locations are stored here
+	
+	self.filtereditems = ko.computed(function(location) {
+    var filter = self.userInput().toLowerCase();
+    
+    if (!filter) {
+      self.places().forEach(function(location) {
+          location.marker.setVisible(true);
         });
+      return self.places();
+      } else {
+        return ko.utils.arrayFilter(self.places(), function(location) {
+         return ko.utils.stringStartsWith(location.title().toLowerCase(), filter);           
+        });
+      }
+    }, self);
 
-    });
 
 	self.select = function(parent) {
        openInfo(parent);		//opening the info window here
@@ -58,10 +65,6 @@ var Viewmodel = function() {
 		this.isOpen(false);		//close list window
 		return true;
 	};
-
-	
-
-
 	// set the properties of marker here
 	self.presentMarker = function() {
 
