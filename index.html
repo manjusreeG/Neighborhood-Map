@@ -22,7 +22,7 @@
 		<div class="row">
 			<div class="search-items" data-bind="css: {open: isOpen}">
 				<p>Filter<input type="search" placeholder="your choice" data-bind="textInput: userInput, value: filter, valueUpdate: 'afterkeydown'  " />
-				<ul id="list-view" data-bind="foreach: locations">
+				<ul id="list-view" data-bind="foreach: filteredItems">
 					<li data-bind=" text: title, click: $root.presentMarker, $root.showInfo, $root.listItemClick, event: {mouseover:$root.ladyIcon, mouseout:$root.resetIcon}">
 						<a data-bind="text: title, visible: show, click: $root.list"></a>
 					</li>
