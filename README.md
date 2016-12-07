@@ -17,4 +17,4 @@
 ## APIs, tools and data used
 
 * Google Maps API
-* Wikipedia API
+* Flickr API
