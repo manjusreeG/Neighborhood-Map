@@ -20,68 +20,7 @@ ko.applyBindings(new Viewmodel());
 
 }
 
-var stringStartsWith = function (string, startsWith) {
-    string = string || "";
-    if (startsWith.length > string.length) {
-        return false;
-    }
-    return string.substring(0, startsWith.length) === startsWith;
-  };
-
-var Viewmodel = function() {
-	var self = this;
-	//map boundary is controlled here
-	var bounds = new google.maps.LatLngBounds();
-
-	self.userInput = ko.observable('');
-	self.isOpen = ko.observable(false);
-	self.places = ko.observableArray(self.locations); //locations are stored here
-	
-	self.filtereditems = ko.computed(function(location) {
-    var filter = self.userInput().toLowerCase();
-    
-    if (!filter) {
-      self.places().forEach(function(location) {
-          location.marker.setVisible(true);
-        });
-      return self.places();
-      } else {
-        return ko.utils.arrayFilter(self.places(), function(location) {
-         return ko.utils.stringStartsWith(location.title().toLowerCase(), filter);           
-        });
-      }
-    }, self);
-
-
-	self.select = function(parent) {
-       openInfo(parent);		//opening the info window here
-    };
-
-	self.toggle = function() {
-		this.isOpen(!this.isOpen()); // open list
-	};
-
-	self.close = function() {
-		this.isOpen(false);		//close list window
-		return true;
-	};
-	// set the properties of marker here
-	self.presentMarker = function() {
-
-		for (var i = 0; i < self.locations().length; i++) {
-		 self.locations()[i].marker.clicked = false;
-		 google.maps.event.trigger(self.locations()[i].marker, 'mouseout')
-		}
-		this.marker.setIcon(MallIcon);
-		console.log(this.marker.clicked);
-		this.marker.clicked = true;
-		self.populateInfoWindow(this.marker, infowindow);
-	}
-
-	self.filtersVisible = ko.observable('');
-
-	// shopping malls locations are defined here
-	self.locations= ko.observableArray([{
+var locations = [{
 		title: 'Phoenix Market city,Chennai',
 		coordinates: {lat: 12.992526, lng: 80.217214},
 		place: ' Tami Nadu, India',
@@ -116,7 +55,74 @@ var Viewmodel = function() {
 		place: ' Karnataka, India',
 		marker: null,
 		visible: ko.observable(true)
-	}]);
+	}];
+
+
+var stringStartsWith = function (string, startsWith) {
+    string = string || "";
+    if (startsWith.length > string.length) {
+        return false;
+    }
+    return string.substring(0, startsWith.length) === startsWith;
+};
+
+var Viewmodel = function() {
+	var self = this;
+	//map boundary is controlled here
+	var bounds = new google.maps.LatLngBounds();
+
+	self.userInput = ko.observable('');
+	self.isOpen = ko.observable(false);
+	self.locations= ko.observableArray(locations);
+
+	self.filteredItems = ko.computed(function(location) {
+    var filter = self.userInput().toLowerCase();
+    //If there is nothing in the filter, return the full list and all markers are visible
+    if (!filter) {
+      return self.locations();
+    //If a search is entered, compare search data to place names and show only list items and markers that match the search value
+      } else {
+        return ko.utils.arrayFilter(self.locations(), function(location) {
+         
+          //To show markers that match the search value and return list items that match the search value
+            return location.title.toLowerCase().indexOf(filter) > -1;
+        });
+      }
+    }, self);
+
+
+	self.select = function(parent) {
+       openInfo(parent);		//opening the info window here
+    };
+
+	self.toggle = function() {
+		this.isOpen(!this.isOpen()); // open list
+	};
+
+	self.close = function() {
+		this.isOpen(false);		//close list window
+		return true;
+	};
+
+	
+
+
+	// set the properties of marker here
+	self.presentMarker = function() {
+
+		for (var i = 0; i < self.locations().length; i++) {
+		 self.locations()[i].marker.clicked = false;
+		 google.maps.event.trigger(self.locations()[i].marker, 'mouseout')
+		}
+		this.marker.setIcon(MallIcon);
+		console.log(this.marker.clicked);
+		this.marker.clicked = true;
+		self.populateInfoWindow(this.marker, infowindow);
+	}
+
+	self.filtersVisible = ko.observable('');
+
+	// shopping malls locations are defined here
 
 	// the infoWindow is defined here
 	self.populateInfoWindow = function (marker, infowindow) {
@@ -197,6 +203,7 @@ var Viewmodel = function() {
 		// The pin marker is defined here
 		 defaultIcon = makeMarkerIcon('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|05F941|40|_|%E2%80%A2');
 		// Location properties will be declared
+	  self.locations().forEach(function(location)  {
 		for (var i = 0; i < self.locations().length; i++) {
 			var position  = self.locations()[i].coordinates;
 			var title = self.locations()[i].title;
@@ -212,6 +219,8 @@ var Viewmodel = function() {
 				clicked: false,
 
 			});
+			locations[i].marker = marker;
+
 			markers.push(marker);
 			self.locations()[i].marker = marker;
 			//when marker is clicked infowindow will appear
@@ -224,6 +233,8 @@ var Viewmodel = function() {
 				self.populateInfoWindow(this, infowindow);
 				this.clicked = true;
 			});
+
+			location.marker = marker;
 			//Mallmarker function is defined here
 			marker.addListener('mouseover', function() {
 				this.setIcon(MallIcon);
@@ -237,6 +248,7 @@ var Viewmodel = function() {
 			//extend the marker postion by bounds
 			bounds.extend(marker.position);
 		}
+	});
 		//map will fit withinthe boundary of map
 		map.fitBounds(bounds);
 	}
