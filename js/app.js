@@ -3,7 +3,7 @@ var map;
 var markers = [];
 var MallIcon;
 var defaultIcon;
-var infowindow;
+var largeInfowindow;
 var filter;
 
 /*Initialized the map  fn here */
@@ -15,9 +15,9 @@ function initMap() {
 		},
 		zoom: 6 //map zoom level is determined here
 	});
- //asynchronising the codes here
-ko.applyBindings(new Viewmodel());
-
+	largeInfowindow = new google.maps.InfoWindow();
+	//asynchronising the codes here
+	ko.applyBindings(new Viewmodel());
 }
 
 var locations = [{
@@ -55,7 +55,7 @@ var locations = [{
 		place: ' Karnataka, India',
 		marker: null,
 		visible: ko.observable(true)
-	}];
+}];
 
 
 var stringStartsWith = function (string, startsWith) {
@@ -64,7 +64,7 @@ var stringStartsWith = function (string, startsWith) {
         return false;
     }
     return string.substring(0, startsWith.length) === startsWith;
-};
+  };
 
 var Viewmodel = function() {
 	var self = this;
@@ -104,9 +104,6 @@ var Viewmodel = function() {
 		return true;
 	};
 
-	
-
-
 	// set the properties of marker here
 	self.presentMarker = function() {
 
@@ -117,7 +114,7 @@ var Viewmodel = function() {
 		this.marker.setIcon(MallIcon);
 		console.log(this.marker.clicked);
 		this.marker.clicked = true;
-		self.populateInfoWindow(this.marker, infowindow);
+		self.populateInfoWindow(this.marker, largeInfowindow);
 	}
 
 	self.filtersVisible = ko.observable('');
@@ -133,7 +130,7 @@ var Viewmodel = function() {
 			infowindow.marker = marker;
 		var address = getSearchTerms(marker.title);
 		//wikipedia url is obtained here
-		var wikiUrl = "https://en.wikipedia.org/w/api.php?action=isOpensearch&search=" + address.wikiSrcTxt + "&limit=1&redirects=resolve&namespace=0&format=json&callback=wikicallback";
+        var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&sort=relevance&api_key=9e73281a3f783e57ab3e63c465af5a16&text=' + address.flickrSrcTxt + '&format=json&safe_search=1&per_page=20';
 
 		infowindow.open(map, marker);
 		// shows error when wikipedia element is not shown.
@@ -141,31 +138,29 @@ var Viewmodel = function() {
 			alert('ERROR: Data Loading failed ');
 		}, 10000);
 
-	self.wikimarker = function(marker, infowindow) {
+		
 		$.ajax({
-			url: wikiUrl,
-			dataType: 'jsonp',
-			jsonp: 'jsoncallback',
-		}).success(function(data) {
-		 	var wiki;
-			if (data[2].length != 0) {
-				var wikiInfo = {
-					summary: data[2],
-					url: data[3]
-				};
-				var wiki = '<p>'  + wikiInfo.summary + '</p><p><a href="' + wikiInfo.url + '">' + wikiInfo.url + '</a></p>';
-			} else {
-				wiki = '<p> Wikipedia Link is Not Available </p>';
-			}
+			url: flickrUrl,
+            dataType: 'jsonp',
+            jsonp: 'jsoncallback',
+        }).then(function(data, status, xhr) {
+            var image = "";
+             //if there is flickr data available load the picure otherwise indicate in infowindow that there isn't anything available
+           if (data.photos.photo[0]) {
+              var photo = data.photos.photo[0];
+              image = '<img src="https://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '_t.jpg"</img>';
+            } else {
+               image = '<p>OOPS!!! :-( Flickr Image is not Available</p>';
+            }
 	    		
-	    	InfoContent(marker, wiki);
+	    	InfoContent(marker, image);
 			clearTimeout(self.apiTimeout);
 			});
+		
 		}
-	}
 		// marker infos are defined here
-		var InfoContent = function(marker, wiki) { 
-			infowindow.setContent('<div class = "info-window"><p class = "infowiki"><h4>' + marker.title + '</h4>' + wiki  + '</p></div>');
+		var InfoContent = function(marker, image) { 
+			infowindow.setContent('<div class = "info-window"><p class = "flickrimg">' + image + '<h4>' + marker.title + '</h4></p></div>');
 			//info window is closed once the close button is pressed
 			infowindow.addListener('closeclick', function() {
 				marker.setIcon(defaultIcon);
@@ -203,7 +198,7 @@ var Viewmodel = function() {
 		// The pin marker is defined here
 		 defaultIcon = makeMarkerIcon('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|05F941|40|_|%E2%80%A2');
 		// Location properties will be declared
-	  self.locations().forEach(function(location)  {
+		self.locations().forEach(function(location)  {
 		for (var i = 0; i < self.locations().length; i++) {
 			var position  = self.locations()[i].coordinates;
 			var title = self.locations()[i].title;
@@ -225,14 +220,15 @@ var Viewmodel = function() {
 			self.locations()[i].marker = marker;
 			//when marker is clicked infowindow will appear
 			marker.addListener('click', function() {
-				for (var i = 0; i < self.locations().length; i++) {
-					self.locations()[i].marker.clicked = false;
-					google.maps.event.trigger(self.locations()[i].marker, 'mouseout');
-				}
-				this.setIcon(MallIcon);
-				self.populateInfoWindow(this, infowindow);
-				this.clicked = true;
-			});
+                for (i = 0; i < self.locations().length; i++){
+                  self.locations()[i].marker.clicked = false;
+                  google.maps.event.trigger(self.locations()[i].marker, 'mouseout');
+                }
+                this.setIcon(MallIcon);
+                self.populateInfoWindow(this, largeInfowindow);
+                this.clicked = true;
+            });
+
 
 			location.marker = marker;
 			//Mallmarker function is defined here
@@ -277,7 +273,7 @@ function getSearchTerms(loc) {
 		fullLoc[i] = fullLoc[i].toLowerCase();
 	}
 	var address = {
-		wikiSrcTxt: fullLoc[0]
+        flickrSrcTxt: fullLoc[0] + fullLoc[2] + '+ny'
 	}
 	return address;
 }
