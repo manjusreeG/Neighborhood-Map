@@ -61,6 +61,15 @@ li {
   flex: wrap;
 }
 
+.infowiki{
+  display: flex;
+}
+
+.flickrimg {
+  display: flex;
+}
+
+
 @media screen and (max-width: 549px) {
   .search-items, .location-list {
     max-height: 140px;
