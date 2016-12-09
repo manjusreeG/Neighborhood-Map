@@ -130,7 +130,7 @@ var Viewmodel = function() {
 			infowindow.marker = marker;
 		var address = getSearchTerms(marker.title);
 		//wikipedia url is obtained here
-        var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&sort=relevance&api_key=9e73281a3f783e57ab3e63c465af5a16&text=' + address.flickrSrcTxt + '&format=json&safe_search=1&per_page=20';
+        var wikiUrl = "https://en.wikipedia.org/w/api.php?action=opensearch&search=" + address.wikiSrcTxt + "&limit=1&redirects=resolve&namespace=0&format=json";
 
 		infowindow.open(map, marker);
 		// shows error when wikipedia element is not shown.
@@ -140,27 +140,28 @@ var Viewmodel = function() {
 
 		
 		$.ajax({
-			url: flickrUrl,
+			url: wikiUrl,
             dataType: 'jsonp',
-            jsonp: 'jsoncallback',
-        }).then(function(data, status, xhr) {
-            var image = "";
-             //if there is flickr data available load the picure otherwise indicate in infowindow that there isn't anything available
-           if (data.photos.photo[0]) {
-              var photo = data.photos.photo[0];
-              image = '<img src="https://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '_t.jpg"</img>';
-            } else {
-               image = '<p>OOPS!!! :-( Flickr Image is not Available</p>';
-            }
+        }).done(function(data) {
+                var wiki;
+                if (data[2].length != 0) {
+                    var wikiInfo = {
+                        summary: data[2],
+                        url: data[3]
+                    };
+                    var wiki = '<p>' + wikiInfo.summary + '</p><p><a href="' + wikiInfo.url + '">' + wikiInfo.url + '</a></p>';
+                } else {
+                    wiki = '<p>No Wikipedia Info Available</p>';
+                }
 	    		
-	    	InfoContent(marker, image);
+	    	InfoContent(marker, wiki);
 			clearTimeout(self.apiTimeout);
 			});
 		
 		}
 		// marker infos are defined here
-		var InfoContent = function(marker, image) { 
-			infowindow.setContent('<div class = "info-window"><p class = "flickrimg">' + image + '<h4>' + marker.title + '</h4></p></div>');
+		var InfoContent = function(marker, wiki) { 
+			infowindow.setContent('<div class = "info-window"><p class = "infowiki"><h4>' + marker.title + '</h4>' + wiki + '</p></div>');
 			//info window is closed once the close button is pressed
 			infowindow.addListener('closeclick', function() {
 				marker.setIcon(defaultIcon);
@@ -171,7 +172,7 @@ var Viewmodel = function() {
 			});
 			//close marker is closed
 			google.maps.event.addDOMListener(map, 'click', function() {
-				marker.setIcon(defaultIcon);
+				marker.setIcon(MallIcon);
 				marker.clicked = true;
 				infowindow.marker = wiki;
 				infowindow.close();
@@ -273,7 +274,7 @@ function getSearchTerms(loc) {
 		fullLoc[i] = fullLoc[i].toLowerCase();
 	}
 	var address = {
-        flickrSrcTxt: fullLoc[0] + fullLoc[2] + '+ny'
+        wikiSrcTxt: fullLoc[0]
 	}
 	return address;
 }
