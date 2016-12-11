@@ -1,12 +1,12 @@
-/* The map variable is created here */
+/* All the global variables are created here */
 var map;
 var markers = [];
-var MallIcon;
-var defaultIcon;
-var largeInfowindow;
+var Shoppinggirl;
+var pinmarker;
+var infowin;
 var filter;
 
-/*Initialized the map  fn here */
+/*Initialized the map  fn here  and referenced basic map initialisation*/
 function initMap() {
 	map= new  google.maps.Map(document.getElementById('map'), {
 		center: {
@@ -15,11 +15,12 @@ function initMap() {
 		},
 		zoom: 6 //map zoom level is determined here
 	});
-	largeInfowindow = new google.maps.InfoWindow();
-	//asynchronising the codes here
+	infowin = new google.maps.InfoWindow();
+	//Google map is asynchronising the codes with knockout.js here
 	ko.applyBindings(new Viewmodel());
 }
 
+/* The locations of shopping malls with details are defined here*/
 var locations = [{
 		title: 'Phoenix Market city,Chennai',
 		coordinates: {lat: 12.992526, lng: 80.217214},
@@ -57,7 +58,7 @@ var locations = [{
 		visible: ko.observable(true)
 }];
 
-
+//This function is used as a part in filtering the locations list in sidebar
 var stringStartsWith = function (string, startsWith) {
     string = string || "";
     if (startsWith.length > string.length) {
@@ -66,15 +67,18 @@ var stringStartsWith = function (string, startsWith) {
     return string.substring(0, startsWith.length) === startsWith;
   };
 
+
+/* Here comes the code to display my map with parameters*/
 var Viewmodel = function() {
 	var self = this;
 	//map boundary is controlled here
 	var bounds = new google.maps.LatLngBounds();
-
+	//The viewmodel's object are declared 
 	self.userInput = ko.observable('');
 	self.isOpen = ko.observable(false);
 	self.locations= ko.observableArray(locations);
 
+	//this defines the filtering function in search bar and I got idea from [http://www.knockmeout.net/2011/04/utility-functions-in-knockoutjs.html]
 	self.filteredItems = ko.computed(function(location) {
     var filter = self.userInput().toLowerCase();
     //If there is nothing in the filter, return the full list and all markers are visible
@@ -83,12 +87,37 @@ var Viewmodel = function() {
     //If a search is entered, compare search data to place names and show only list items and markers that match the search value
       } else {
         return ko.utils.arrayFilter(self.locations(), function(location) {
-         
+         filteredmall = stringStartsWith(location.title.toLowerCase(), filter);
           //To show markers that match the search value and return list items that match the search value
+          if (filteredmall) {
+              location.marker.setVisible(true);
+              console.log("clicked");
+              return filteredmall
+            }
+            //To Hide markers that do not match the search value
+           else {
+              location.marker.setVisible(false);
+              return filteredmall
+            }
             return location.title.toLowerCase().indexOf(filter) > -1;
         });
       }
     }, self);
+
+    self.populateMap = ko.computed(function() {
+        var searchQuery = self.userInput().toLowerCase();
+        var selectLocations = [];
+
+        if (!searchQuery) {
+
+            return populateFullLocations();
+        } else {
+            console.log("attempt to repopulate map");
+            return populateFilteredMap(searchQuery);
+
+        }
+    });
+
 
 
 	self.select = function(parent) {
@@ -111,17 +140,15 @@ var Viewmodel = function() {
 		 self.locations()[i].marker.clicked = false;
 		 google.maps.event.trigger(self.locations()[i].marker, 'mouseout')
 		}
-		this.marker.setIcon(MallIcon);
+		this.marker.setIcon(Shoppinggirl);
 		console.log(this.marker.clicked);
 		this.marker.clicked = true;
-		self.populateInfoWindow(this.marker, largeInfowindow);
+		self.populateInfoWindow(this.marker, infowin);
 	}
 
 	self.filtersVisible = ko.observable('');
 
-	// shopping malls locations are defined here
-
-	// the infoWindow is defined here
+	// the infoWindow with all information  is defined here
 	self.populateInfoWindow = function (marker, infowindow) {
 
 		map.fitBounds(bounds);
@@ -138,43 +165,41 @@ var Viewmodel = function() {
 			alert('ERROR: Data Loading failed ');
 		}, 10000);
 
-		
+		//AJAX request and wikipedia link code is stored here
 		$.ajax({
 			url: wikiUrl,
             dataType: 'jsonp',
         }).done(function(data) {
                 var wiki;
                 if (data[2].length != 0) {
-                    var wikiInfo = {
+                    var wikilink = {
                         summary: data[2],
                         url: data[3]
                     };
-                    var wiki = '<p>' + wikiInfo.summary + '</p><p><a href="' + wikiInfo.url + '">' + wikiInfo.url + '</a></p>';
+                    var wiki = '<p>' + wikilink.summary + '</p><p><a href="' + wikilink.url + '">' + wikilink.url + '</a></p>';
                 } else {
                     wiki = '<p>No Wikipedia Info Available</p>';
                 }
-	    		
 	    	InfoContent(marker, wiki);
-			clearTimeout(self.apiTimeout);
+			clearTimeout(self.apiTimeout); //this lines calls when api timesout to show the information
 			});
-		
 		}
 		// marker infos are defined here
 		var InfoContent = function(marker, wiki) { 
 			infowindow.setContent('<div class = "info-window"><p class = "infowiki"><h4>' + marker.title + '</h4>' + wiki + '</p></div>');
 			//info window is closed once the close button is pressed
 			infowindow.addListener('closeclick', function() {
-				marker.setIcon(defaultIcon);
+				marker.setIcon(pinmarker);
 				marker.clicked = false;
 				infowindow.marker = null;
 				map.setCenter(map.center);
 				map.fitBounds(bounds);
 			});
-			//close marker is closed
-			google.maps.event.addDOMListener(map, 'click', function() {
-				marker.setIcon(MallIcon);
-				marker.clicked = true;
-				infowindow.marker = wiki;
+			//info window opens when marker is clicked
+			google.maps.event.addListener(map, 'click', function() {
+				marker.setIcon(pinmarker);
+				marker.clicked = false;
+				infowindow.marker = null;
 				infowindow.close();
 				map.fitBounds(bounds);
 			});
@@ -188,17 +213,19 @@ var Viewmodel = function() {
 		}
 	};
 
+	//the user input is consoled in developer window here
 	self.writeConsole = ko.computed(function() {
         console.log(self.userInput());
     });
 
+	//the marker is created here
 	self.createMarkers = function() {
 		 infowindow = new google.maps.InfoWindow(); //info window is specified here
 		// this specifies the lady icon when the pin marker is clicked
-		 MallIcon = makeMarkerIcon('http://www.clipartkid.com/images/59/shopping-centers-and-shopping-malls-based-in-part-on-criteria-bl6mf2-clipart.jpg'); 
+		 Shoppinggirl = makeMarkerIcon('http://www.clipartkid.com/images/59/shopping-centers-and-shopping-malls-based-in-part-on-criteria-bl6mf2-clipart.jpg'); 
 		// The pin marker is defined here
-		 defaultIcon = makeMarkerIcon('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|05F941|40|_|%E2%80%A2');
-		// Location properties will be declared
+		 pinmarker = makeMarkerIcon('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|05F941|40|_|%E2%80%A2');
+		// Location properties are defined in marker
 		self.locations().forEach(function(location)  {
 		for (var i = 0; i < self.locations().length; i++) {
 			var position  = self.locations()[i].coordinates;
@@ -210,13 +237,12 @@ var Viewmodel = function() {
 				position: position,
 				title: title,
 				animation: google.maps.Animation.DROP,
-				icon: defaultIcon,
+				icon: pinmarker,
 				id: i,
 				clicked: false,
-
 			});
 			locations[i].marker = marker;
-
+			//This will  save locations in marker
 			markers.push(marker);
 			self.locations()[i].marker = marker;
 			//when marker is clicked infowindow will appear
@@ -225,21 +251,19 @@ var Viewmodel = function() {
                   self.locations()[i].marker.clicked = false;
                   google.maps.event.trigger(self.locations()[i].marker, 'mouseout');
                 }
-                this.setIcon(MallIcon);
-                self.populateInfoWindow(this, largeInfowindow);
+                this.setIcon(Shoppinggirl);
+                self.populateInfoWindow(this, infowin);
                 this.clicked = true;
             });
-
-
 			location.marker = marker;
-			//Mallmarker function is defined here
+			//Shoppinggirl  icon function is defined here
 			marker.addListener('mouseover', function() {
-				this.setIcon(MallIcon);
+				this.setIcon(Shoppinggirl);
 			});
-			//Lady marker function is defined here
+			//pinmarker icon function is defined here
 			marker.addListener('mouseout', function(){
 				if (!this.clicked) {
-					this.setIcon(defaultIcon);
+					this.setIcon(pinmarker);
 				}
 			});
 			//extend the marker postion by bounds
@@ -251,14 +275,111 @@ var Viewmodel = function() {
 	}
 	self.createMarkers();
 
+
+
 	self.ladyIcon = function() {
-		this.marker.setIcon(MallIcon); //when mouse is over marker it changes to lady icon
+		this.marker.setIcon(Shoppinggirl); //when mouse is over marker it changes to lady icon
 	}
 
 	self.resetIcon = function() {
 		if (!this.marker.click){
-			this.marker.setIcon(defaultIcon); // when mouse is out .. the pin marker will retained
+			this.marker.setIcon(pinmarker); // when mouse is out .. the pin marker will retained
 		}
+	}
+
+	function populateFullLocations(){
+		self.locations().forEach(function(location)  {
+		for (var i = 0; i < self.locations().length; i++) {
+			var position  = self.locations()[i].coordinates;
+			var title = self.locations()[i].title;
+			var info = self.infowindow;
+			//create the marker location property here
+			marker = new google.maps.Marker({
+				map: map,
+				position: position,
+				title: title,
+				animation: google.maps.Animation.DROP,
+				icon: pinmarker,
+				id: i,
+				clicked: false,
+			});
+			locations[i].marker = marker;
+			//This will  save locations in marker
+			markers.push(marker);
+			self.locations()[i].marker = marker;
+			//when marker is clicked infowindow will appear
+			marker.addListener('click', function() {
+                for (i = 0; i < self.locations().length; i++){
+                  self.locations()[i].marker.clicked = false;
+                  google.maps.event.trigger(self.locations()[i].marker, 'mouseout');
+                }
+                this.setIcon(Shoppinggirl);
+                self.populateInfoWindow(this, infowin);
+                this.clicked = true;
+            });
+			location.marker = marker;
+			//Shoppinggirl  icon function is defined here
+			marker.addListener('mouseover', function() {
+				this.setIcon(Shoppinggirl);
+			});
+			//pinmarker icon function is defined here
+			marker.addListener('mouseout', function(){
+				if (!this.clicked) {
+					this.setIcon(pinmarker);
+				}
+			});
+			//extend the marker postion by bounds
+			bounds.extend(marker.position);
+		};
+	});
+	}
+	function populateFilteredMap(searchQuery) {
+		self.locations().forEach(function(location)  {
+		for (var i = 0; i < self.locations().length; i++) {
+			var position  = self.locations()[i].coordinates;
+			var titleToSearch = location.title.toLowerCase();
+			var title = self.locations()[i].title;
+			var info = self.infowindow;
+		  if (titleToSearch.indexOf(searchQuery) !== -1) {
+			//create the marker location property here
+			marker = new google.maps.Marker({
+				map: map,
+				position: position,
+				title: title,
+				animation: google.maps.Animation.DROP,
+				icon: pinmarker,
+				id: i,
+				clicked: false,
+			});
+			locations[i].marker = marker;
+			//This will  save locations in marker
+			markers.push(marker);
+			//when marker is clicked infowindow will appear
+			marker.addListener('click', function() {
+                for (i = 0; i < self.locations().length; i++){
+                  self.locations()[i].marker.clicked = false;
+                  google.maps.event.trigger(self.locations()[i].marker, 'mouseout');
+                }
+                this.setIcon(Shoppinggirl);
+                self.populateInfoWindow(this, infowin);
+                this.clicked = true;
+            });
+			location.marker = marker;
+			}
+			//Shoppinggirl  icon function is defined here
+			marker.addListener('mouseover', function() {
+				this.setIcon(Shoppinggirl);
+			});
+			//pinmarker icon function is defined here
+			marker.addListener('mouseout', function(){
+				if (!this.clicked) {
+					this.setIcon(pinmarker);
+				}
+			});
+			//extend the marker postion by bounds
+			bounds.extend(marker.position);
+		};
+	});
 	}
 };
 
@@ -267,14 +388,13 @@ function getSearchTerms(loc) {
 	console.log(loc)
 	var userInput; //userInput is defined here
 
-	var fullLoc = loc.split(",");
-
-	for (var i = 0; i < fullLoc.length; i++) {
-		fullLoc[i] = fullLoc[i].replace(/ /g, "+");
-		fullLoc[i] = fullLoc[i].toLowerCase();
+	var searchplace = loc.split(",");
+	for (var i = 0; i < searchplace.length; i++) {
+		searchplace[i] = searchplace[i].replace(/ /g, "+");
+		searchplace[i] = searchplace[i].toLowerCase();
 	}
 	var address = {
-        wikiSrcTxt: fullLoc[0]
+        wikiSrcTxt: searchplace[0]
 	}
 	return address;
 }
@@ -282,7 +402,7 @@ function getSearchTerms(loc) {
 function makeMarkerIcon(image) {
     var markerImage = new google.maps.MarkerImage(
         image,
-        new google.maps.Size(21, 34),
+        new google.maps.Size(40, 34),
         new google.maps.Point(0, 0),
         new google.maps.Point(10, 34),
         new google.maps.Size(21, 34));
