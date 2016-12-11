@@ -83,6 +83,9 @@ var Viewmodel = function() {
     var filter = self.userInput().toLowerCase();
     //If there is nothing in the filter, return the full list and all markers are visible
     if (!filter) {
+    	self.locations().forEach(function(location) {
+          location.marker.setVisible(true);
+        });
       return self.locations();
     //If a search is entered, compare search data to place names and show only list items and markers that match the search value
       } else {
@@ -103,21 +106,6 @@ var Viewmodel = function() {
         });
       }
     }, self);
-
-    self.populateMap = ko.computed(function() {
-        var searchQuery = self.userInput().toLowerCase();
-        var selectLocations = [];
-
-        if (!searchQuery) {
-
-            return populateFullLocations();
-        } else {
-            console.log("attempt to repopulate map");
-            return populateFilteredMap(searchQuery);
-
-        }
-    });
-
 
 
 	self.select = function(parent) {
@@ -153,8 +141,14 @@ var Viewmodel = function() {
 
 		map.fitBounds(bounds);
 
-		if (infowindow.marker != marker) {
+	if (infowindow.marker != marker) {
 			infowindow.marker = marker;
+
+
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+            setTimeout(function () {
+                marker.setAnimation(null);
+            }, 700);
 		var address = getSearchTerms(marker.title);
 		//wikipedia url is obtained here
         var wikiUrl = "https://en.wikipedia.org/w/api.php?action=opensearch&search=" + address.wikiSrcTxt + "&limit=1&redirects=resolve&namespace=0&format=json";
@@ -226,7 +220,7 @@ var Viewmodel = function() {
 		// The pin marker is defined here
 		 pinmarker = makeMarkerIcon('http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|05F941|40|_|%E2%80%A2');
 		// Location properties are defined in marker
-		self.locations().forEach(function(location)  {
+		
 		for (var i = 0; i < self.locations().length; i++) {
 			var position  = self.locations()[i].coordinates;
 			var title = self.locations()[i].title;
@@ -269,7 +263,7 @@ var Viewmodel = function() {
 			//extend the marker postion by bounds
 			bounds.extend(marker.position);
 		}
-	});
+	
 		//map will fit withinthe boundary of map
 		map.fitBounds(bounds);
 	}
@@ -289,24 +283,20 @@ var Viewmodel = function() {
 
 	function populateFullLocations(){
 		self.locations().forEach(function(location)  {
-		for (var i = 0; i < self.locations().length; i++) {
-			var position  = self.locations()[i].coordinates;
-			var title = self.locations()[i].title;
-			var info = self.infowindow;
+			var position  = location.coordinates;
+			var title = location.title;
+			
 			//create the marker location property here
 			marker = new google.maps.Marker({
 				map: map,
 				position: position,
 				title: title,
 				animation: google.maps.Animation.DROP,
-				icon: pinmarker,
-				id: i,
-				clicked: false,
+				id: location
 			});
-			locations[i].marker = marker;
 			//This will  save locations in marker
 			markers.push(marker);
-			self.locations()[i].marker = marker;
+		
 			//when marker is clicked infowindow will appear
 			marker.addListener('click', function() {
                 for (i = 0; i < self.locations().length; i++){
@@ -318,28 +308,14 @@ var Viewmodel = function() {
                 this.clicked = true;
             });
 			location.marker = marker;
-			//Shoppinggirl  icon function is defined here
-			marker.addListener('mouseover', function() {
-				this.setIcon(Shoppinggirl);
-			});
-			//pinmarker icon function is defined here
-			marker.addListener('mouseout', function(){
-				if (!this.clicked) {
-					this.setIcon(pinmarker);
-				}
-			});
-			//extend the marker postion by bounds
-			bounds.extend(marker.position);
-		};
-	});
+		});
 	}
 	function populateFilteredMap(searchQuery) {
 		self.locations().forEach(function(location)  {
-		for (var i = 0; i < self.locations().length; i++) {
-			var position  = self.locations()[i].coordinates;
+			var position  = location.coordinates;
 			var titleToSearch = location.title.toLowerCase();
-			var title = self.locations()[i].title;
-			var info = self.infowindow;
+			var title = location.title;
+
 		  if (titleToSearch.indexOf(searchQuery) !== -1) {
 			//create the marker location property here
 			marker = new google.maps.Marker({
@@ -347,13 +323,10 @@ var Viewmodel = function() {
 				position: position,
 				title: title,
 				animation: google.maps.Animation.DROP,
-				icon: pinmarker,
-				id: i,
-				clicked: false,
+				id: location,
 			});
-			locations[i].marker = marker;
 			//This will  save locations in marker
-			markers.push(marker);
+		
 			//when marker is clicked infowindow will appear
 			marker.addListener('click', function() {
                 for (i = 0; i < self.locations().length; i++){
@@ -365,21 +338,8 @@ var Viewmodel = function() {
                 this.clicked = true;
             });
 			location.marker = marker;
-			}
-			//Shoppinggirl  icon function is defined here
-			marker.addListener('mouseover', function() {
-				this.setIcon(Shoppinggirl);
-			});
-			//pinmarker icon function is defined here
-			marker.addListener('mouseout', function(){
-				if (!this.clicked) {
-					this.setIcon(pinmarker);
-				}
-			});
-			//extend the marker postion by bounds
-			bounds.extend(marker.position);
-		};
-	});
+		  }
+		});
 	}
 };
 
